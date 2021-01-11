@@ -13,10 +13,10 @@ plane = p.createCollisionShape(p.GEOM_PLANE)
 p.createMultiBody(0, plane)
 
 useMaximalCoordinates = True
-sphereRadius = 0.1 #0.25
-
+sphereRadius = 0.25
+#colBoxId = p.createCollisionShapeArray([p.GEOM_BOX, p.GEOM_SPHERE],radii=[sphereRadius+0.03,sphereRadius+0.03], halfExtents=[[sphereRadius,sphereRadius,sphereRadius],[sphereRadius,sphereRadius,sphereRadius]])
+#colBoxId = p.createCollisionShape(p.GEOM_BOX, halfExtents=[sphereRadius, sphereRadius, sphereRadius])
 colBoxId = p.createCollisionShape(p.GEOM_SPHERE,radius=sphereRadius)
-
 
 
 mass = 1
@@ -33,13 +33,9 @@ indices = []
 jointTypes = []
 axis = []
 
-for i in range(30):
+for i in range(10):
   link_Masses.append(1)
   linkCollisionShapeIndices.append(colBoxId)
-  clothId = p.loadSoftBody("textured_sphere_smooth.obj", basePosition = [0,0+i*0.5,1], scale = 0.2, mass = 1.,useNeoHookean = 0, useBendingSprings=1,useMassSpring=1, springElasticStiffness=40,springDampingStiffness=10, springDampingAllDirections = 1,useSelfCollision = 0, frictionCoeff = .5, useFaceContact=1) 
-  # clothId = p.loadSoftBody("cube.obj", basePosition = [0,0+i*0.5,1] , scale = 2, mass = 1., useNeoHookean = 0, useBendingSprings=1,useMassSpring=1, springElasticStiffness=40, springDampingStiffness=.1, springDampingAllDirections = 1, useSelfCollision = 0, frictionCoeff = .5, useFaceContact=1, collisionMargin = 0.04)
-
-  p.createSoftBodyAnchor(clothId,1,colBoxId,-1,[0.5,-0.5,0])
   linkVisualShapeIndices.append(-1)
   linkPositions.append([0, sphereRadius * 2.0 + 0.01, 0])
   linkOrientations.append([0, 0, 0, 1])
@@ -48,12 +44,6 @@ for i in range(30):
   indices.append(i)
   jointTypes.append(p.JOINT_REVOLUTE)
   axis.append([0, 0, 1])
-
-
-
-
-p.changeVisualShape(clothId, -1, flags=p.VISUAL_SHAPE_DOUBLE_SIDED) 
-
 
 basePosition = [0, 0, 1]
 baseOrientation = [0, 0, 0, 1]
@@ -85,7 +75,7 @@ for i in range(p.getNumJoints(sphereUid)):
   p.changeDynamics(sphereUid, i, lateralFriction=2, anisotropicFriction=anistropicFriction)
 
 dt = 1. / 240.
-SNAKE_NORMAL_PERIOD = 1.5  #0.1
+SNAKE_NORMAL_PERIOD = 0.1  #1.5
 m_wavePeriod = SNAKE_NORMAL_PERIOD
 
 m_waveLength = 4
@@ -153,30 +143,3 @@ while (1):
   p.stepSimulation()
 
   time.sleep(dt)
-
-
-debug = True
-if debug:
-  data = p.getMeshData(clothId, -1, flags=p.MESH_DATA_SIMULATION_MESH)
-  print("--------------")
-  print("data=",data)
-  print(data[0])
-  print(data[1])
-  text_uid = []
-  for i in range(data[0]):
-      pos = data[1][i]
-      uid = p.addUserDebugText(str(i), pos, textColorRGB=[1,1,1])
-      text_uid.append(uid)
-
-while p.isConnected():
-  p.getCameraImage(320,200)
-  
-  if debug:
-    data = p.getMeshData(clothId, -1, flags=p.MESH_DATA_SIMULATION_MESH)
-    for i in range(data[0]):
-      pos = data[1][i]
-      uid = p.addUserDebugText(str(i), pos, textColorRGB=[1,1,1], replaceItemUniqueId=text_uid[i])
-
-  p.setGravity(0,0,-9.8)
-  p.stepSimulation()
-
