@@ -18,10 +18,16 @@ sphereRadius = 0.25
 #colBoxId = p.createCollisionShape(p.GEOM_BOX, halfExtents=[sphereRadius, sphereRadius, sphereRadius])
 colBoxId = p.createCollisionShape(p.GEOM_SPHERE,radius=sphereRadius)
 
-#soft body
-clothId = p.loadSoftBody("textured_sphere_smooth.obj", basePosition=[0,0,1], scale = 0.5, mass = 1., useNeoHookean = 0, useBendingSprings=1,useMassSpring=1, springElasticStiffness=40, springDampingStiffness=.1, springDampingAllDirections = 1, useSelfCollision = 0, frictionCoeff = .5, useFaceContact=1)
+basePosition = [0,-2.5,0.5]
+baseOrientation = p.getQuaternionFromEuler([0,0,90])
+springDampingStiffness=10
 
-p.changeVisualShape(clothId, -1, flags=p.VISUAL_SHAPE_DOUBLE_SIDED)
+#soft body
+clothId = p.loadSoftBody("soft20.obj", basePosition=basePosition, baseOrientation = baseOrientation, scale=0.5, mass=1.,
+                                    useNeoHookean=0, useBendingSprings=1, useMassSpring=1, springElasticStiffness=40,
+                                    springDampingStiffness= springDampingStiffness, springDampingAllDirections=1, useSelfCollision=0,
+                                    frictionCoeff=.5, useFaceContact=0)
+# p.changeVisualShape(clothId, -1, flags=p.VISUAL_SHAPE_DOUBLE_SIDED)
 p.setPhysicsEngineParameter(sparseSdfVoxelSize=0.25)
 
 
@@ -42,7 +48,7 @@ axis = []
 for i in range(36):
   link_Masses.append(1)
   linkCollisionShapeIndices.append(colBoxId)
-  p.createSoftBodyAnchor(clothId ,1,colBoxId,-1, [0.5,-0.5,0])
+  # p.createSoftBodyAnchor(clothId ,1,colBoxId,-1, [0.5,-0.5,0])
   linkVisualShapeIndices.append(-1)
   linkPositions.append([0, sphereRadius * 2.0 + 0.01, 0])
   linkOrientations.append([0, 0, 0, 1])

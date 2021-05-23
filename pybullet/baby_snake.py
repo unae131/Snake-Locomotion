@@ -2,6 +2,7 @@ import pybullet as p
 import pybullet_data
 import math
 import time
+from scipy.spatial.transform import Rotation as R
 
 physicsClient = p.connect(p.GUI) # or p.DIRECT for non-graphical version
 p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally : register the directory
@@ -54,7 +55,7 @@ for i in range(9):
     linkInertialFrameOrientations.append([0,0,0,1])
     linkParentIndices.append(i)
     linkJointTypes.append(p.JOINT_SPHERICAL)
-    linkJointAxis.append([0,0,1])
+    linkJointAxis.append([0,1,0])
 
 # create rigid objects by shapes
 snakeId = p.createMultiBody(baseMass, cylinderId, -1, basePosition, baseOrientation, 
@@ -71,7 +72,7 @@ snakeId = p.createMultiBody(baseMass, cylinderId, -1, basePosition, baseOrientat
                               # useMaximalCoordinates=True) # seperate links
 
             
-soft = True
+soft = False
 numJoints = p.getNumJoints(snakeId)
 
 """ load soft body """
@@ -79,7 +80,7 @@ if soft:
     # Available files : cube.obj, cube2.obj, sphere_smooth.obj, duck.obj 
     # p.loadSoftBody("cube2.obj", basePosition = basePosition , scale = 1, mass = 1., useNeoHookean = 0, useBendingSprings=1,useMassSpring=1, springElasticStiffness=40, springDampingStiffness=.1, springDampingAllDirections = 1, useSelfCollision = 0, frictionCoeff = .5, useFaceContact=1, collisionMargin = 0.04)
     print("Start loading...")
-    clothId = p.loadSoftBody("soft_cube_snake.obj", basePosition = [0,-2.5,2], scale = 0.5, mass = 1., useNeoHookean = 0, useBendingSprings=1,useMassSpring=1, springElasticStiffness=40, springDampingStiffness=.1, springDampingAllDirections = 1, useSelfCollision = 0, frictionCoeff = .5, useFaceContact=0)
+    clothId = p.loadSoftBody("soft_cube_snake.obj", basePosition = [0,-2.5,2], scale = 0.5, mass = 0, useNeoHookean = 0, useBendingSprings=1,useMassSpring=1, springElasticStiffness=40, springDampingStiffness=.1, springDampingAllDirections = 1, useSelfCollision = 0, frictionCoeff = .5, useFaceContact=True)
     print("Loading is completed...")
 
     # remove collisions
@@ -177,55 +178,87 @@ m_waveAmplitude = 0.8
 m_waveFront = 0.0
 m_segmentLength = gap + cylinderHeight
 # forward = 0
+m_steering = 0.0
 
 
 """ move """
 # p.setRealTimeSimulation(0)
 start_time = time.time()
 while True:
-# for i in range(500):
+    keys = p.getKeyboardEvents()
+    for k, v in keys.items():
+
+        if (k == p.B3G_RIGHT_ARROW and (v & p.KEY_WAS_TRIGGERED)):
+            m_steering = -.2
+        if (k == p.B3G_RIGHT_ARROW and (v & p.KEY_WAS_RELEASED)):
+            m_steering = 0
+        if (k == p.B3G_LEFT_ARROW and (v & p.KEY_WAS_TRIGGERED)):
+            m_steering = .2
+        if (k == p.B3G_LEFT_ARROW and (v & p.KEY_WAS_RELEASED)):
+            m_steering = 0
+
+    # amp = 0.2
+    # offset = 0.6
+    # numMuscles = p.getNumJoints(sphereUid)
     scaleStart = 1.0
 
-    # start waves
+    #start of the snake with smaller waves.
+    #I think starting the wave at the tail would work better ( while it still goes from head to tail )
     if (m_waveFront < m_segmentLength * 4.0):
         scaleStart = m_waveFront / (m_segmentLength * 4.0)
+    
+    # segment = numMuscles - 1
 
-    segment = numJoints - 1
-
-    # we simply move the snake forward.
-    # this snake may be going backwards, but who can tell ;)
-    for joint in range(numJoints):
-        segment = joint # numJoints - 1 - joint
+    #we simply move a sin wave down the body of the snake.
+    #this snake may be going backwards, but who can tell ;)
+    numJoint = p.getNumJoints(snakeId)
+    for joint in range(numJoint-1, -1, -1):
+        segment = joint
         #map segment to phase
         phase = (m_waveFront - (segment + 1) * m_segmentLength) / m_waveLength
         phase -= math.floor(phase)
         phase *= math.pi * 2.0
 
-        #map phase to curvature
+        #map phase to curvature(곡률)
         targetPos = math.sin(phase) * scaleStart * m_waveAmplitude
-        
-        # set our motor (stepSimulation will process motors)
+        # targetPos = [0.,math.sin(phase) * scaleStart * m_waveAmplitude, 0.]
+        # idx = 1
+
+        #// steer snake by squashing +ve or -ve side of sin curve
+        if (m_steering > 0 and targetPos < 0):
+            targetPos *= 1.0 / (1.0 + m_steering)
+
+        if (m_steering < 0 and targetPos > 0):
+            targetPos *= 1.0 / (1.0 - m_steering)
+        targetPos += m_steering
+
+        # if (m_steering > 0 and targetPos[idx] < 0):
+        #   targetPos[idx] *= 1.0 / (1.0 + m_steering)
+
+        # if (m_steering < 0 and targetPos[idx] > 0):
+        #   targetPos[idx] *= 1.0 / (1.0 - m_steering)
+
+        # set our motor
+        # p.setJointMotorControl2(sphereUid,
         p.setJointMotorControlMultiDof(snakeId,
                                 joint,
                                 p.POSITION_CONTROL,
-                                targetPosition = [0,targetPos,0, 1],
-                                force = [50])
-    
-        #wave keeps track of where the wave is in time
-        m_waveFront += dt / m_wavePeriod * m_waveLength
-	
-        # rigid_soft_contact and plane_contact
-        # print(i,p.getContactPoints(bodyA = snakeId, bodyB = clothId),p.getContactPoints())
-    # p.setRealTimeSimulation(1)
+                                # targetPosition=targetPos + m_steering,
+                                # targetPosition=[0.,0,targetPos,1.],
+                                targetPosition=R.as_quat(R.from_euler('xyz', [0.,targetPos, 0.])),
+                                force=[30]) # 0이면 velocity motor disable -> 그래도 잘 다님
 
-    ''' getContactPoints()
-    returns the contact points computed during the most recent call to stepSimulation.
-    Note that if you change the state of the simulation after stepSimulation,
-    the'getContactPoints' is not updated and potentially invalid.
-    '''
-    # print(p.getContactPoints(bodyA = snakeId, bodyB = clothId))
+        print()
+        #If you want a wheel to maintain a constant velocity, with a max force you can use:
+        # p.setJointMotorControl2(sphereUid, 
+        #                         joint, 
+        #                         p.VELOCITY_CONTROL,
+        #                         targetVelocity = 15,
+        #                         force = 20)
+
+        #wave keeps track of where the wave is in time
+    m_waveFront += dt / m_wavePeriod * m_waveLength
     p.stepSimulation()
-    # time.sleep(dt)
 
 finish_time = time.time()
 print("time : " + str(finish_time - start_time))
