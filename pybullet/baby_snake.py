@@ -4,6 +4,52 @@ import math
 import time
 from scipy.spatial.transform import Rotation as R
 
+def anchor(skinId, boneId, tmpIdx = 0):
+    p.createSoftBodyAnchor(skinId, 0, boneId, 0+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 1, boneId, 0+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 4, boneId, 0+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 5, boneId, 0+tmpIdx)
+
+    p.createSoftBodyAnchor(skinId, 32, boneId, 1+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 33, boneId, 1+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 35, boneId, 1+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 34, boneId, 1+tmpIdx)
+
+    p.createSoftBodyAnchor(skinId, 24, boneId, 2+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 25, boneId, 2+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 26, boneId, 2+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 27, boneId, 2+tmpIdx)
+
+    p.createSoftBodyAnchor(skinId, 28, boneId, 3+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 29, boneId, 3+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 30, boneId, 3+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 31, boneId, 3+tmpIdx)
+
+    p.createSoftBodyAnchor(skinId, 8, boneId, 4+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 9, boneId, 4+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 10, boneId, 4+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 11, boneId, 4+tmpIdx)
+
+    p.createSoftBodyAnchor(skinId, 16, boneId, 5+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 17, boneId, 5+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 18, boneId, 5+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 19, boneId, 5+tmpIdx)
+
+    p.createSoftBodyAnchor(skinId, 12, boneId, 6+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 13, boneId, 6+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 14, boneId, 6+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 15, boneId, 6+tmpIdx)
+
+    p.createSoftBodyAnchor(skinId, 20, boneId, 7+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 21, boneId, 7+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 22, boneId, 7+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 23, boneId, 7+tmpIdx)
+
+    p.createSoftBodyAnchor(skinId, 2, boneId, 8+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 3, boneId, 8+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 6, boneId, 8+tmpIdx)
+    p.createSoftBodyAnchor(skinId, 7, boneId, 8+tmpIdx)
+
 physicsClient = p.connect(p.GUI) # or p.DIRECT for non-graphical version
 p.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally : register the directory
 p.resetSimulation(p.RESET_USE_DEFORMABLE_WORLD) # enable FEM for deformable things
@@ -72,7 +118,7 @@ snakeId = p.createMultiBody(baseMass, cylinderId, -1, basePosition, baseOrientat
                               # useMaximalCoordinates=True) # seperate links
 
             
-soft = False
+soft = True
 numJoints = p.getNumJoints(snakeId)
 
 """ load soft body """
@@ -88,6 +134,8 @@ if soft:
         p.setCollisionFilterGroupMask(snakeId, i, 0, 0)
         p.setCollisionFilterPair(0, snakeId, -1, i, 1)
         p.setCollisionFilterPair(snakeId, clothId,i, -1, 0)
+
+    anchor(clothId, snakeId)
 
 """ debug """
 debug = True
@@ -112,53 +160,7 @@ if soft:
     # for j in range(nodeNum):
     #     p.createSoftBodyAnchor(clothId, i+j, snakeId, i)
     #     p.createSoftBodyAnchor(clothId, i+j+vtxNum, snakeId, i)
-    p.createSoftBodyAnchor(clothId, 1, snakeId, 0)
-    p.createSoftBodyAnchor(clothId, 2, snakeId, 0)
-    p.createSoftBodyAnchor(clothId, 5, snakeId, 0)
-    p.createSoftBodyAnchor(clothId, 6, snakeId, 0)
-
-    p.createSoftBodyAnchor(clothId, 33, snakeId, 1)
-    p.createSoftBodyAnchor(clothId, 34, snakeId, 1)
-    # p.createSoftBodyAnchor(clothId, 36, snakeId, 1)
-    p.createSoftBodyAnchor(clothId, 35, snakeId, 1)
-
-    p.createSoftBodyAnchor(clothId, 25, snakeId, 2)
-    p.createSoftBodyAnchor(clothId, 26, snakeId, 2)
-    p.createSoftBodyAnchor(clothId, 27, snakeId, 2)
-    p.createSoftBodyAnchor(clothId, 28, snakeId, 2)
-
-    p.createSoftBodyAnchor(clothId, 29, snakeId, 3)
-    p.createSoftBodyAnchor(clothId, 30, snakeId, 3)
-    p.createSoftBodyAnchor(clothId, 31, snakeId, 3)
-    p.createSoftBodyAnchor(clothId, 32, snakeId, 3)
-
-    p.createSoftBodyAnchor(clothId, 9, snakeId, 4)
-    p.createSoftBodyAnchor(clothId, 10, snakeId, 4)
-    p.createSoftBodyAnchor(clothId, 11, snakeId, 4)
-    p.createSoftBodyAnchor(clothId, 12, snakeId, 4)
-
-    p.createSoftBodyAnchor(clothId, 17, snakeId, 5)
-    p.createSoftBodyAnchor(clothId, 18, snakeId, 5)
-    p.createSoftBodyAnchor(clothId, 19, snakeId, 5)
-    p.createSoftBodyAnchor(clothId, 20, snakeId, 5)
-
-    p.createSoftBodyAnchor(clothId, 13, snakeId, 6)
-    p.createSoftBodyAnchor(clothId, 14, snakeId, 6)
-    p.createSoftBodyAnchor(clothId, 15, snakeId, 6)
-    p.createSoftBodyAnchor(clothId, 16, snakeId, 6)
-
-    p.createSoftBodyAnchor(clothId, 21, snakeId, 7)
-    p.createSoftBodyAnchor(clothId, 22, snakeId, 7)
-    p.createSoftBodyAnchor(clothId, 23, snakeId, 7)
-    p.createSoftBodyAnchor(clothId, 24, snakeId, 7)
-
-    p.createSoftBodyAnchor(clothId, 3, snakeId, 8)
-    p.createSoftBodyAnchor(clothId, 4, snakeId, 8)
-    p.createSoftBodyAnchor(clothId, 7, snakeId, 8)
-    p.createSoftBodyAnchor(clothId, 8, snakeId, 8)
-
-
-    # p.createSoftBodyAnchor(clothId, 0, snakeId, 0, [0,0,0])
+    
 
 
 """ Movement """
